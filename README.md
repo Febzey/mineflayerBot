@@ -37,6 +37,7 @@ This Bot uses 100% solely JavaScript, NodeJS, a server side JavaScript runtime.
 1. Extract `/mineflayerBot` to your Desktop or folder of choice (if downloaded from `code` button)
 1. open CMD or your terminal / IDE of choice. (command prompt or windows powershell is completely fine).
 1. cd (Change Directory) to the `/mineflayerBot`. Video on how to CD here: [How to change directories on windows](https://www.youtube.com/watch?v=wjId6xgXvIw)
+1. Ensure you have `nodeJS version >= 16.0.0`
 1. Type `npm install`.
 1. Type `npm start`.
 1. fill in your info via the console prompts. 
