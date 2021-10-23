@@ -9,13 +9,13 @@ import loadPatterns from "./patterns.js";
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 
-    const tokenError = "There was a problem with your Discord bot token. Please try again.";
-    const exitMessage = chalk.yellow("Exisiting peacfully. To start again Type:", chalk.blue("npm start"));
-    const repolink = "https://github.com/febzey/mineflayerBot"
+const tokenError = "There was a problem with your Discord bot token. Please try again.";
+const exitMessage = chalk.yellow("Exisiting peacfully. To start again Type:", chalk.blue("npm start"));
+const repolink = "https://github.com/febzey/mineflayerBot"
 
 
-    console.log(chalk.green('-------------------------------------------------------------'));
-    console.log(chalk.red(`
+console.log(chalk.green('-------------------------------------------------------------'));
+console.log(chalk.red(`
                         
     Hello! Thank you for using this bot! Have Fun and Enjoy! \n
 
@@ -24,7 +24,7 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
     Check back frequently at ${repolink} for new features.
 
                         `))
-    console.log(chalk.green('-------------------------------------------------------------'));
+console.log(chalk.green('-------------------------------------------------------------'));
 
 
 const rl = createInterface({
@@ -44,9 +44,10 @@ let bot,
     version,
     auth,
     port,
-    token;
+    token,
+    useDiscord;
 
-const startBot = (a, b, c, d, e, f) => {
+const startBot = async (a, b, c, d, e, f) => { //start minecraft and discord bot.
 
     /**
      * Description
@@ -59,7 +60,21 @@ const startBot = (a, b, c, d, e, f) => {
      * @returns {bot}
      */
 
-    if(!e) e = options.auth ? options.auth : 'microsoft';
+    const askToLoginMineflayer = (await promisedQuestion(`Log Minecraft bot into ${a}? Y or N: `)).toLowerCase() === 'y';
+
+    if(!askToLoginMineflayer) return console.warn(exitMessage), process.exit(1);
+
+    if (token) {
+
+        const askToLoginDiscord = (await promisedQuestion("Login Discord bot? Y or N: ")).toLowerCase() === 'y';
+        if (askToLoginDiscord && token) {
+            try { client.login(token) }
+            catch { throw new Error("There was an issue logging in the discord bot.")};
+        }
+ 
+    }
+
+    if (!e) e = options.auth ? options.auth : 'microsoft';
     console.log(chalk.blue("Starting Minecraft Bot..."));
     const botInstance = new Bot(a, b, c, d, e, f);
     return bot = botInstance.run();
@@ -67,96 +82,43 @@ const startBot = (a, b, c, d, e, f) => {
 };
 
 
+const saveSettings = async () => {
 
-const askToUseDiscordBot = async () => {
+    const creds = token ? token : false;
 
-    const askToUse = (await promisedQuestion(`Setup Discord Bot? Y or N: `)).toLowerCase() === 'y';
-
-    if (askToUse) {
-
-        token = await promisedQuestion("Discord Bot Token: ");
-
-        return;
-
-    } else {
-
-        return;
-
+    const settings = {
+        host: host,
+        email: email,
+        pass: pass,
+        version: version,
+        auth: 'microsoft',
+        port: port,
+        token: creds,
+        saveSettings: true
     };
 
-};
+    try {
 
+        const promise = writeFile('./src/config/options.json', JSON.stringify(settings))
+        await promise;
 
+    } catch (err) {
 
-
-
-
-const askToStart = async () => {
-
-    const askToStartBot = (await promisedQuestion(`Log Minecraft bot into ${host}? Y or N: `)).toLowerCase() === 'y';
-
-    if (askToStartBot) {
-
-        return startBot(host, email, pass, version, auth, port);
+        throw new Error("There was a problem saving your settings.")
 
     }
 
-    else {
-        console.log(exitMessage);
-        process.exit(1);
-    };
-};
+}
 
 
+const setupDiscordBot = async () => {
 
-
-
-
-
-const askToSave = async () => {
-    const shouldSave = (await promisedQuestion("Would you like to save these settings for later use? Y or N ")).toLowerCase() === 'y';
-
-    if (shouldSave) {
-
-        let creds = token && typeof token !== 'undefined' ? token : false;
-
-        const settings = {
-            host: host,
-            email: email,
-            pass: pass,
-            version: version,
-            auth: 'microsoft',
-            port: port,
-            token: creds,
-            saveSettings: true
-        };
-
-        await writeFile('./src/config/options.json', JSON.stringify(settings)).catch(err => { throw new Error(err) });
-
-        console.log(chalk.green("Saved Successfully. to `./src/config/options.json`"));
-
-        return askToStart();
-
-    } else if (!shouldSave) {
-
-        await writeFile('./src/config/options.json', JSON.stringify({saveSettings:false})).catch(err => { throw new Error(err) });
-
-        console.warn(chalk.red("Settings will not be saved... and current ones will be deleted."));
-        return askToStart();
-
-    }
-
+    return token = await promisedQuestion("Discord bot Token: ");
 
 };
 
 
-
-
-
-
-const beginLogin = async () => {
-
-    await askToUseDiscordBot();
+const initialize = async () => {
 
     host = await promisedQuestion("Minecraft Server IP: ");
     version = await promisedQuestion("Server Version: ");
@@ -164,115 +126,83 @@ const beginLogin = async () => {
     email = await promisedQuestion("Minecraft Account Email: ");
     pass = await promisedQuestion("Minecraft Account Password: ");
 
-    let bool = token ? true : false;
+    useDiscord = (await promisedQuestion("Setup a discord bot? Y or N: ")).toLowerCase() === 'y';
 
-    console.table([
-        { host: host, version: version, port: port, email: email, password: pass, useDiscordBot: bool, }
-    ]);
+    if (useDiscord) await setupDiscordBot();
 
-    const isCorrect = (await promisedQuestion("Is this information correct? Y or N ")).toLowerCase() === 'y';
+    if (host && version && port && email && pass) {
 
-    if (isCorrect) {
+        const bool = token ? true : false;
 
-        return askToSave();
+        console.table([
+            { host: host, version: version, port: port, email: email, password: pass, useDiscordBot: bool, }
+        ]);
 
-    } else if (!isCorrect) return askQuestions();
-}
+        const isCorrect = (await promisedQuestion("Does this look correct to you? Y or N: ")).toLowerCase() === 'y';
 
+        if (!isCorrect) return initialize();
 
+        const ask = (await promisedQuestion("Save these settings to a local file for later use? Y or N: ")).toLowerCase() === 'y';
 
+        if (ask) await saveSettings();
 
-
-
-const askQuestions = async () => {
-
-    if (options.saveSettings) {
-
-        let useLocalStorage = (await promisedQuestion("Do you want to use your locally saved settings? Y or N: ")).toLowerCase() === 'y';
-
-        if (useLocalStorage) {
-
-            let useDiscord;
-
-            if (options.token && options.token !== false) { 
-
-                useDiscord = (await promisedQuestion("Activate Discord bot? Y or N: ")).toLowerCase() === 'y';
-
-            };
-
-            try {
-
-                host = options.host
-                email = options.email;
-                pass = options.pass;
-                version = options.version;
-                auth = options.auth;
-                port = options.port;
-                token = useDiscord ? options.token : false; 
-
-                /**
-                 * If useDiscord is true then set token to options.token, else set to false.
-                 */
-
-            } catch (err) {
-
-                throw new Error("It appears your locally stored settings are missing or inaccurate.");
-
-            }
-
-            return askToStart();
-
-        }
-
-        else if (!useLocalStorage) {
-
-            return beginLogin();
-
-        } 
-
-    } else if (!options.saveSettings) {
-
-        return beginLogin();
+        return startBot(host, email, pass, version, auth, port);
 
     }
 
+    else {
+
+        throw new Error("Error, Please try again.");
+
+    }
+
+};
+
+
+const start = async () => {
+
+    if (!options || !options.saveSettings) return initialize();
+
+    const confirmUse = (await promisedQuestion("Do you want to use your locally stored settings? Y or N: ")).toLowerCase() === 'y';
+    if (!confirmUse) return initialize();
+
+    host = options.host
+    email = options.email;
+    pass = options.pass;
+    version = options.version;
+    auth = options.auth;
+    port = options.port;
+    token = options.token;
+
+    return await startBot(host, email, pass, version, auth, port);
 
 }
 
 
 
-
-
-await askQuestions().then(() => {
+await start().then(() => {
 
     if (!bot) return new Error("Bot is undefined!");
 
-    if (token) {
-
-        try {
-            client.login(token);
-        } catch (err) {
-            return console.error(chalk.red(tokenError))
-        }
-
+    if (token || options.token) {
 
         client.on("ready", () => {
             console.log(chalk.green("Discord bot is online."))
-            
-        })
-    } 
+
+        });
+    }
 
     return handleEvents(bot, host),
            loadPatterns(bot),
            readCommands('commands', bot);
 
 })
-.then(() => {
+    .then(() => {
 
-    rl.on('line', (input) => {
-       return bot.chat(input);
-      });
+        rl.on('line', (input) => {
+            return bot.chat(input);
+        });
 
-})
+    })
 
 
