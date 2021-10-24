@@ -17,8 +17,6 @@ Want to have your own Minecraft bot that is premade and easy to add onto ? Perha
 
 >Local storage in the form of JSON to remember your login credentials and Minecraft Server information (optional)
 
->Capability to record and save chat messages in a `.txt` file
-
 >Configuration.
 
 
