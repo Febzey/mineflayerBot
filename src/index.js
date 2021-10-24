@@ -199,11 +199,12 @@ async function initialize() {
 
     else {
 
-        throw new Error("Error, Please try again.");
+        console.error(chalk.red("Error, you have left some things blank, Please restart.")),
+        process.exit(1)
 
     }
 
-}
+};
 
 
 async function start() {
@@ -226,7 +227,7 @@ async function start() {
 
     await startBot(host, email, pass, version, auth, port);
 
-}
+};
 
 //TODO: create live chat module.
 
