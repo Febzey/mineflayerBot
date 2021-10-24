@@ -4,8 +4,9 @@ import { writeFile } from 'fs/promises';
 import { Client, Intents } from 'discord.js';
 import chalk from 'chalk';
 import handleEvents from "./functions/handleEvents.js";
+import handleLiveChat from "./functions/handleLiveChat.js";
 import readCommands from "./functions/loadCommands.js";
-import loadPatterns from "./patterns.js";
+import loadPatterns from "./util/patterns.js";
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 
@@ -21,7 +22,9 @@ console.log(chalk.red(`
 
     Message 'Febzey#1854' on discord for any questions. \n
 
-    Check back frequently at ${repolink} for new features.
+    Check back frequently at ${repolink} for new features. \n
+
+    Refer to /instructions/setup.md for detailed instructions.
 
                         `))
 console.log(chalk.green('-------------------------------------------------------------'));
@@ -45,10 +48,10 @@ let bot,
     auth,
     port,
     token,
+    channelID,
     useDiscord;
 
-const startBot = async (a, b, c, d, e, f) => { //start minecraft and discord bot.
-
+async function startBot(a, b, c, d, e, f) {
     /**
      * Description
      * @param {a} host
@@ -62,29 +65,22 @@ const startBot = async (a, b, c, d, e, f) => { //start minecraft and discord bot
 
     const askToLoginMineflayer = (await promisedQuestion(`Log Minecraft bot into ${a}? Y or N: `)).toLowerCase() === 'y';
 
-    if(!askToLoginMineflayer) return console.warn(exitMessage), process.exit(1);
+    if (!askToLoginMineflayer)
+        return console.warn(exitMessage), process.exit(1);
 
-    if (token) {
-
-        const askToLoginDiscord = (await promisedQuestion("Login Discord bot? Y or N: ")).toLowerCase() === 'y';
-        if (askToLoginDiscord && token) {
-            try { client.login(token) }
-            catch { throw new Error("There was an issue logging in the discord bot.")};
-        }
- 
-    }
 
     if (!e) e = options.auth ? options.auth : 'microsoft';
     console.log(chalk.blue("Starting Minecraft Bot..."));
     const botInstance = new Bot(a, b, c, d, e, f);
     return bot = botInstance.run();
 
-};
+}
 
 
-const saveSettings = async () => {
+async function saveSettings() {
 
     const creds = token ? token : false;
+    const liveChatChannel = channelID ? channelID : false;
 
     const settings = {
         host: host,
@@ -94,31 +90,73 @@ const saveSettings = async () => {
         auth: 'microsoft',
         port: port,
         token: creds,
+        channelID: liveChatChannel,
         saveSettings: true
     };
 
     try {
 
-        const promise = writeFile('./src/config/options.json', JSON.stringify(settings))
+        const promise = writeFile('./src/config/options.json', JSON.stringify(settings));
         await promise;
 
     } catch (err) {
 
-        throw new Error("There was a problem saving your settings.")
+        throw new Error("There was a problem saving your settings.");
 
     }
 
 }
 
 
-const setupDiscordBot = async () => {
+let LoginDiscord;
 
-    return token = await promisedQuestion("Discord bot Token: ");
+async function startDiscordBot(credentials) {
 
-};
+    LoginDiscord = (await promisedQuestion("Login Discord bot? Y or N: ")).toLowerCase() === 'y';
+
+    if (LoginDiscord && credentials) {
+
+        try { client.login(credentials); }
+        catch { throw new Error(tokenError); };
+
+        return await new Promise((resolve) => {
+
+            client.on("ready", async () => {
+
+                return resolve(console.log(chalk.green("Discord bot ready!")));
+
+            });
+
+        });
+
+    }
+
+    return;
+
+}
 
 
-const initialize = async () => {
+let channelName;
+
+async function setupDiscordBot() {
+
+    token = await promisedQuestion("Discord bot Token: ");
+
+    if (token) await startDiscordBot(token);
+
+    channelID = await promisedQuestion("Channel ID for Live Chat. (leave blank to skip this): ");
+
+    if (client.channels.cache.get(channelID) === undefined) return console.log(chalk.red("Invalid channel id."));
+
+    channelName = client.channels.cache.get(channelID).name;
+
+    console.log(chalk.blue(`Found channel: '${channelName}' successfully!`));
+
+    return token;
+}
+
+
+async function initialize() {
 
     host = await promisedQuestion("Minecraft Server IP: ");
     version = await promisedQuestion("Server Version: ");
@@ -133,9 +171,18 @@ const initialize = async () => {
     if (host && version && port && email && pass) {
 
         const bool = token ? true : false;
+        const channel = channelName ? channelName : false;
 
         console.table([
-            { host: host, version: version, port: port, email: email, password: pass, useDiscordBot: bool, }
+            {
+                host: host,
+                version: version,
+                port: port,
+                email: email,
+                password: pass,
+                useDiscordBot: bool,
+                Live_Chat_Channel: channel
+            }
         ]);
 
         const isCorrect = (await promisedQuestion("Does this look correct to you? Y or N: ")).toLowerCase() === 'y';
@@ -156,53 +203,53 @@ const initialize = async () => {
 
     }
 
-};
+}
 
 
-const start = async () => {
+async function start() {
 
     if (!options || !options.saveSettings) return initialize();
 
     const confirmUse = (await promisedQuestion("Do you want to use your locally stored settings? Y or N: ")).toLowerCase() === 'y';
     if (!confirmUse) return initialize();
 
-    host = options.host
+    host = options.host;
     email = options.email;
     pass = options.pass;
     version = options.version;
     auth = options.auth;
     port = options.port;
     token = options.token;
+    channelID = options.channelID;
 
-    return await startBot(host, email, pass, version, auth, port);
+    await startDiscordBot(token);
+
+    await startBot(host, email, pass, version, auth, port);
 
 }
 
+//TODO: create live chat module.
 
+await start()
 
-await start().then(() => {
+    .then(() => {
 
-    if (!bot) return new Error("Bot is undefined!");
+        if (!bot) return new Error("Error with code.");
 
-    if (token || options.token) {
+        handleEvents(bot, host),
+        loadPatterns(bot),
+        readCommands('commands', bot);
 
-        client.on("ready", () => {
-            console.log(chalk.green("Discord bot is online."))
+        if (client && channelID && token && LoginDiscord) handleLiveChat(client, bot, channelID, host);
 
-        });
-    }
+    })
 
-    return handleEvents(bot, host),
-           loadPatterns(bot),
-           readCommands('commands', bot);
-
-})
     .then(() => {
 
         rl.on('line', (input) => {
             return bot.chat(input);
         });
 
-    })
+    });
 
 
