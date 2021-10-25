@@ -74,7 +74,7 @@ async function startBot(a, b, c, d, e, f) {
     const botInstance = new Bot(a, b, c, d, e, f);
     return bot = botInstance.run();
 
-}
+};
 
 
 async function saveSettings() {
@@ -103,9 +103,9 @@ async function saveSettings() {
 
         throw new Error("There was a problem saving your settings.");
 
-    }
+    };
 
-}
+};
 
 
 let LoginDiscord;
@@ -129,11 +129,11 @@ async function startDiscordBot(credentials) {
 
         });
 
-    }
+    };
 
     return;
 
-}
+};
 
 
 let channelName;
@@ -153,7 +153,7 @@ async function setupDiscordBot() {
     console.log(chalk.blue(`Found channel: '${channelName}' successfully!`));
 
     return token;
-}
+};
 
 
 async function initialize() {
@@ -202,7 +202,7 @@ async function initialize() {
         console.error(chalk.red("Error, you have left some things blank, Please restart.")),
         process.exit(1)
 
-    }
+    };
 
 };
 
@@ -223,7 +223,7 @@ async function start() {
     token = options.token;
     channelID = options.channelID;
 
-    await startDiscordBot(token);
+    if (token) await startDiscordBot(token);
 
     await startBot(host, email, pass, version, auth, port);
 

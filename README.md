@@ -33,11 +33,15 @@ This Bot uses 100% solely JavaScript, NodeJS, a server side JavaScript runtime.
 
 1. Download the Source from the `code` button above or use `git clone`.
 1. Read through the code to ensure I am not stealing your credentials or doing anything malicious.
-1. Extract `/mineflayerBot` to your Desktop or folder of choice (if downloaded from `code` button).
+1. Extract `/mineflayerBot` to your Desktop or folder of choice.
 1. open CMD or your terminal / IDE of choice. (command prompt or windows powershell is completely fine).
-1. cd (Change Directory) to the `/mineflayerBot`. Video on how to CD here: [How to change directories on windows](https://www.youtube.com/watch?v=wjId6xgXvIw)
-1. Ensure you have `nodeJS version >= 16.0.0`.
+1. cd (Change Directory) to `/mineflayerBot`. Video on how to CD here: [How to change directories on windows](https://www.youtube.com/watch?v=wjId6xgXvIw)
+1. Ensure you have `nodeJS version >= 16.0.0` installed.
 1. Type `npm install`.
 1. Type `npm start`.
 1. fill in your info via the console prompts. 
 1. Enjoy and have fun!
+
+<br>
+
+> Refer to instructions/setup.d for detailed instructions.
