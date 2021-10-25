@@ -12,7 +12,7 @@ export default {
         if (username === bot.username) return;
         const movements = new Movements(bot, mcData);
         const target = bot.players[username] ? bot.players[username].entity : null;
-        if (!target) return bot.chat("I do not see you!");
+        if (!target) return bot.whisper(username, "I do not see you!");
         bot.pathfinder.setMovements(movements);
         bot.pathfinder.setGoal(new followGoal(target, 2), true);
         movements.canDig = false;
