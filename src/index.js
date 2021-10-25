@@ -241,7 +241,10 @@ await start()
         loadPatterns(bot),
         readCommands('commands', bot);
 
-        if (client && channelID && token && LoginDiscord) handleLiveChat(client, bot, channelID, host);
+        if (client && channelID && token && LoginDiscord) {
+            handleLiveChat(client, bot, channelID, host);
+        };
+
 
     })
 

@@ -9,6 +9,8 @@ Want to have your own Minecraft bot that is premade and easy to add onto ? Perha
 
 >Bot can join any server.
 
+>Bot can follow you.
+
 >Live Chat bridge between a Minecraft Server and Discord Channel. Where you can talk through the bot. (optional)
 
 >Ability to talk through nodeJS console.
