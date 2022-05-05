@@ -231,7 +231,7 @@ async function start() {
 
 //TODO: create live chat module.
 
-await start()
+start()
 
     .then(() => {
 
